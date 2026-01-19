@@ -7,7 +7,7 @@ import streamlit as st
 from datetime import datetime
 import database as db
 import barcode_generator as bg
-import epl_generator as epl
+import zpl_generator as zpl
 
 # Configuración de página
 st.set_page_config(
@@ -26,9 +26,9 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("**Formato:** 8 dígitos")
     st.markdown("**Estructura:** [3 comodín] + [5 SKU]")
-    st.markdown("**Impresora:** Zebra GC420t (EPL)")
+    st.markdown("**Impresora:** Zebra GC420t (ZPL)")
     st.markdown("---")
-    st.info("💡 Los archivos .epl se envían a la impresora usando Zebra Setup Utilities")
+    st.info("💡 Los archivos .zpl se envían a la impresora usando Zebra Setup Utilities")
 
 # Título principal
 st.title("Sistema de Códigos de Barras JYE")
@@ -65,11 +65,11 @@ with tab1:
         st.markdown("""
         **Pasos para imprimir las etiquetas:**
         1. Completa el formulario y genera el código
-        2. Descarga el archivo `.epl` generado
+        2. Descarga el archivo `.zpl` generado
         3. Abre **Zebra Setup Utilities** en tu computadora
         4. Haz clic derecho en la impresora **GC420t**
         5. Selecciona **"Send File"**
-        6. Elige el archivo `.epl` descargado
+        6. Elige el archivo `.zpl` descargado
         7. Las etiquetas se imprimirán automáticamente
 
         **Importante:** Asegúrate de que la impresora esté encendida y las etiquetas cargadas.
@@ -121,7 +121,7 @@ with tab1:
             st.error(f"❌ Error de validación: {mensaje_error}")
         else:
             # Validar cantidad
-            es_valido_cant, mensaje_error_cant = epl.validar_cantidad(cantidad_input)
+            es_valido_cant, mensaje_error_cant = zpl.validar_cantidad(cantidad_input)
 
             if not es_valido_cant:
                 st.error(f"❌ Error en cantidad: {mensaje_error_cant}")
@@ -140,8 +140,8 @@ with tab1:
                             registro = db.crear_codigo_barras(comodin_input, sku_input)
 
                             if registro:
-                                # Generar archivo EPL
-                                contenido_epl = epl.generar_epl_individual(codigo_barras, cantidad_input)
+                                # Generar archivo ZPL
+                                contenido_zpl = zpl.generar_zpl_individual(codigo_barras, cantidad_input)
 
                                 # Mostrar éxito
                                 st.success(f"✅ ¡Código de barras generado exitosamente!")
@@ -159,9 +159,9 @@ with tab1:
 
                                 # Botón de descarga
                                 st.download_button(
-                                    label=f"📥 Descargar {codigo_barras}.epl ({cantidad_input} {'copia' if cantidad_input == 1 else 'copias'})",
-                                    data=contenido_epl,
-                                    file_name=f"{codigo_barras}.epl",
+                                    label=f"📥 Descargar {codigo_barras}.zpl ({cantidad_input} {'copia' if cantidad_input == 1 else 'copias'})",
+                                    data=contenido_zpl,
+                                    file_name=f"{codigo_barras}.zpl",
                                     mime="application/octet-stream",
                                     use_container_width=True,
                                     type="primary"
@@ -417,7 +417,7 @@ with tab2:
                 type="primary",
                 disabled=not confirmar_batch
             ):
-                with st.spinner("Generando lote EPL..."):
+                with st.spinner("Generando lote ZPL..."):
                     try:
                         # Recopilar códigos seleccionados con cantidades
                         codigos_y_cantidades = [
@@ -425,8 +425,8 @@ with tab2:
                             for item in st.session_state.seleccion_batch.values()
                         ]
 
-                        # Generar EPL batch
-                        contenido_epl_batch = epl.generar_epl_batch(codigos_y_cantidades)
+                        # Generar ZPL batch
+                        contenido_zpl_batch = zpl.generar_zpl_batch(codigos_y_cantidades)
 
                         # Actualizar estado impreso en DB
                         codigo_ids = list(st.session_state.seleccion_batch.keys())
@@ -435,7 +435,7 @@ with tab2:
                         if actualizacion_exitosa:
                             # Generar timestamp para nombre de archivo
                             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                            nombre_archivo = f"lote_{timestamp}.epl"
+                            nombre_archivo = f"lote_{timestamp}.zpl"
 
                             # Mostrar éxito
                             st.success("✅ ¡Lote generado exitosamente!")
@@ -443,7 +443,7 @@ with tab2:
                             # Botón de descarga
                             st.download_button(
                                 label=f"📥 Descargar {nombre_archivo} ({etiquetas_totales} etiquetas)",
-                                data=contenido_epl_batch,
+                                data=contenido_zpl_batch,
                                 file_name=nombre_archivo,
                                 mime="application/octet-stream",
                                 use_container_width=True,
@@ -459,7 +459,7 @@ with tab2:
 
                         else:
                             st.error("❌ Error al actualizar el estado de impresión en la base de datos")
-                            st.warning("⚠️ **Importante:** El archivo EPL se generó correctamente, pero el estado en la BD no se actualizó. Los códigos pueden marcarse como 'No Impresos' aunque ya se hayan generado.")
+                            st.warning("⚠️ **Importante:** El archivo ZPL se generó correctamente, pero el estado en la BD no se actualizó. Los códigos pueden marcarse como 'No Impresos' aunque ya se hayan generado.")
 
                     except Exception as e:
                         st.error(f"❌ Error al generar lote: {str(e)}")
@@ -597,22 +597,22 @@ with tab3:
         with col_reimp2:
             st.markdown("")  # Espaciado
             if st.button("🖨️ Reimprimir Código", use_container_width=True, type="primary"):
-                with st.spinner("Generando archivo EPL..."):
+                with st.spinner("Generando archivo ZPL..."):
                     try:
-                        # Generar EPL sin cambiar estado en DB
-                        contenido_epl_reimp = epl.generar_epl_individual(
+                        # Generar ZPL sin cambiar estado en DB
+                        contenido_zpl_reimp = zpl.generar_zpl_individual(
                             codigo['codigo_barras'],
                             cantidad_reimp
                         )
 
                         # Mostrar éxito
-                        st.success("✅ ¡Archivo EPL generado exitosamente!")
+                        st.success("✅ ¡Archivo ZPL generado exitosamente!")
 
                         # Botón de descarga
                         st.download_button(
-                            label=f"📥 Descargar {codigo['codigo_barras']}.epl ({cantidad_reimp} {'copia' if cantidad_reimp == 1 else 'copias'})",
-                            data=contenido_epl_reimp,
-                            file_name=f"{codigo['codigo_barras']}.epl",
+                            label=f"📥 Descargar {codigo['codigo_barras']}.zpl ({cantidad_reimp} {'copia' if cantidad_reimp == 1 else 'copias'})",
+                            data=contenido_zpl_reimp,
+                            file_name=f"{codigo['codigo_barras']}.zpl",
                             mime="application/octet-stream",
                             use_container_width=True,
                             type="primary"
