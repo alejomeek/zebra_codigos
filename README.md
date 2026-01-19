@@ -24,7 +24,7 @@ Sistema web desarrollado con Streamlit para generar y gestionar códigos de barr
 - **Generación Individual**: Crea códigos nuevos con validación de unicidad
 - **Impresión Masiva**: Filtra, selecciona y genera lotes de múltiples códigos
 - **Búsqueda y Consulta**: Busca códigos existentes por código completo o SKU
-- **Reimpresión**: Genera archivos ZPL sin modificar estado en BD
+- **Reimpresión**: Genera archivos EPL sin modificar estado en BD
 - **Gestión de Estado**: Actualiza automáticamente el estado de impresión
 - **Validaciones Robustas**: Previene duplicados y valida inputs
 - **Base de Datos**: Almacenamiento en Supabase (PostgreSQL)
@@ -39,7 +39,7 @@ Sistema web desarrollado con Streamlit para generar y gestionar códigos de barr
 - Navegador web moderno (Chrome, Firefox, Safari, Edge)
 
 ### Hardware (para impresión)
-- Impresora Zebra GC420t (ZPL)
+- Impresora Zebra GC420t (EPL)
 - Zebra Setup Utilities instalado
 - Etiquetas rectangulares 5x2.5cm en rollo
 - Conexión USB entre computadora e impresora
@@ -191,7 +191,7 @@ Genera códigos de barras nuevos uno a la vez.
 
 5. **Descargar archivo**
    - Botón de descarga aparece al generar exitosamente
-   - Archivo: `{codigo_barras}.zpl` (ej: `38598778.zpl`)
+   - Archivo: `{codigo_barras}.epl` (ej: `38598778.epl`)
    - Listo para enviar a impresora
 
 #### Validaciones:
@@ -261,7 +261,7 @@ Filtra, selecciona y genera lotes de múltiples códigos.
 
 **Descargar:**
 - Click en "Descargar lote completo"
-- Archivo: `lote_YYYYMMDD_HHMMSS.zpl`
+- Archivo: `lote_YYYYMMDD_HHMMSS.epl`
 - Sistema actualiza `impreso=True` en BD
 - Botón "Limpiar selección" para reiniciar
 
@@ -285,7 +285,7 @@ Preview:
   - Total de Etiquetas: 45
 
 Resultado:
-  - Archivo: lote_20260118_235900.zpl
+  - Archivo: lote_20260118_235900.epl
   - Códigos actualizados: impreso=True
 ```
 
@@ -329,7 +329,7 @@ Busca códigos existentes y reimprime sin modificar estado en BD.
    - Útil para etiquetas dañadas o perdidas
 
 3. **Descargar**
-   - Archivo: `{codigo_barras}.zpl`
+   - Archivo: `{codigo_barras}.epl`
    - Listo para enviar a impresora
 
 #### Diferencias con TAB 1:
@@ -355,7 +355,7 @@ Busca códigos existentes y reimprime sin modificar estado en BD.
 2. **Configurar impresora**
    - Abre Zebra Setup Utilities
    - La impresora debe aparecer automáticamente
-   - Verifica que esté en modo ZPL (configuración de fábrica)
+   - Verifica que esté en modo EPL (no ZPL)
 
 3. **Cargar etiquetas**
    - Usa etiquetas 5x2.5cm rectangulares
@@ -366,13 +366,13 @@ Busca códigos existentes y reimprime sin modificar estado en BD.
 
 1. **Generar archivo en la aplicación**
    - Cualquier tab (1, 2 o 3)
-   - Descarga archivo `.zpl`
+   - Descarga archivo `.epl`
 
 2. **Enviar a impresora**
    - Abre Zebra Setup Utilities
    - Haz clic derecho en "GC420t"
    - Selecciona **"Send File"**
-   - Navega y selecciona archivo `.zpl` descargado
+   - Navega y selecciona archivo `.epl` descargado
    - Haz clic en **"Enviar"** o **"Open"**
 
 3. **Imprimir**
@@ -416,9 +416,9 @@ codigos_barras_zebra/
 │   ├── validar_inputs()
 │   └── generar_codigo()
 │
-├── zpl_generator.py          # Generación de ZPL (80+ líneas)
-│   ├── generar_zpl_individual()
-│   ├── generar_zpl_batch()
+├── epl_generator.py          # Generación de EPL (90+ líneas)
+│   ├── generar_epl_individual()
+│   ├── generar_epl_batch()
 │   └── validar_cantidad()
 │
 ├── requirements.txt          # Dependencias Python
@@ -517,8 +517,8 @@ codigos_barras_zebra/
 - [ ] Etiquetas cargadas correctamente
 - [ ] Zebra Setup Utilities instalado
 - [ ] Impresora visible en Zebra Setup Utilities
-- [ ] Modo ZPL activado (configuración de fábrica)
-- [ ] Archivo `.zpl` válido (descargado desde app)
+- [ ] Modo EPL activado (no ZPL)
+- [ ] Archivo `.epl` válido (descargado desde app)
 
 **Pasos de diagnóstico:**
 1. Abre Zebra Setup Utilities
@@ -539,12 +539,12 @@ codigos_barras_zebra/
 | Posición incorrecta | Configuración de tamaño | Verifica etiquetas 5x2.5cm |
 | No escanea | Código muy claro/oscuro | Ajusta densidad |
 
-#### Error: "Archivo ZPL inválido"
+#### Error: "Archivo EPL inválido"
 
 **Causa:** Archivo modificado manualmente o corrupto
 
 **Solución:**
-1. NO edites archivos `.zpl` manualmente
+1. NO edites archivos `.epl` manualmente
 2. Regenera desde la aplicación
 3. Descarga nuevamente
 4. Si persiste, reporta bug
@@ -607,7 +607,7 @@ codigos_barras_zebra/
 1. **Imprime en lotes de 20-30** para mejor eficiencia
 2. **Verifica calidad** en primera etiqueta antes de imprimir todo
 3. **Mantén stock** de etiquetas (mínimo 1 rollo de repuesto)
-4. **Archiva archivos ZPL** de lotes grandes por 30 días
+4. **Archiva archivos EPL** de lotes grandes por 30 días
 
 ### Base de Datos
 
@@ -621,10 +621,10 @@ codigos_barras_zebra/
 ## Preguntas Frecuentes (FAQ)
 
 **¿Puedo usar otros tamaños de etiqueta?**
-Sí, pero debes modificar el archivo `zpl_generator.py` con las dimensiones correctas en dots (dpi).
+Sí, pero debes modificar el archivo `epl_generator.py` con las dimensiones correctas en dots (dpi).
 
 **¿Funciona con otras impresoras Zebra?**
-Sí, cualquier impresora Zebra compatible con ZPL debería funcionar. Verifica la resolución (203 dpi).
+Sí, cualquier impresora Zebra compatible con EPL debería funcionar. Verifica la resolución (203 dpi).
 
 **¿Puedo importar códigos existentes en masa?**
 No está implementado en MVP. Puedes agregar esta funcionalidad modificando el código.
@@ -654,8 +654,8 @@ No en el MVP. Code 128 incluye checksum automático en el barcode.
 | Backend | Supabase | Cloud |
 | Base de Datos | PostgreSQL | 15+ |
 | Lenguaje | Python | 3.8+ |
-| Impresión | ZPL | 2 |
-| Hardware | Zebra GC420t | ZPL Mode |
+| Impresión | EPL | 2 |
+| Hardware | Zebra GC420t | EPL Mode |
 
 ---
 
@@ -675,6 +675,11 @@ Proyecto privado para uso interno de **Didácticos Jugando y Educando**.
 
 ## Changelog
 
+### v1.0.1 (2026-01-19)
+- 🔧 **FIX CRÍTICO**: Corregido template EPL - removidas comillas en códigos de barras
+- ✅ Template EPL ahora imprime correctamente (antes se imprimía como texto plano)
+- 📝 Formato correcto: `B100,50,0,1,2,4,60,N,{codigo}` (sin comillas)
+
 ### v1.0.0 (2026-01-18)
 - ✅ Generación individual de códigos
 - ✅ Impresión masiva con filtros
@@ -682,7 +687,7 @@ Proyecto privado para uso interno de **Didácticos Jugando y Educando**.
 - ✅ Validaciones completas
 - ✅ Confirmaciones para operaciones masivas
 - ✅ Gestión de estado en BD
-- ✅ Archivos ZPL para Zebra GC420t
+- ✅ Archivos EPL para Zebra GC420t
 
 ---
 
